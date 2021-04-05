@@ -13,6 +13,8 @@ public func configure(_ app: Application) throws {
         database: "note_db",
         tlsConfiguration: .forClient(certificateVerification: .none)
     ), as: .mysql)
+    app.migrations.add(Note_20210405_4_Migration())
+    app.migrations.add(Notebook_20210405_7_Migration())
     // register routes
     try routes(app)
     
