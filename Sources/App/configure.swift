@@ -1,7 +1,6 @@
 import Vapor
 import Fluent
 import FluentMySQLDriver
-
 // configures your application
 public func configure(_ app: Application) throws {
     // uncomment to serve files from /Public folder
@@ -13,8 +12,36 @@ public func configure(_ app: Application) throws {
         database: "note_db",
         tlsConfiguration: .forClient(certificateVerification: .none)
     ), as: .mysql)
-    app.migrations.add(Note_20210405_4_Migration())
+    // 数据库迁移（创建，更新数据表）
+    app.migrations.add(Note_20210408_1_Migration())
     app.migrations.add(Notebook_20210405_7_Migration())
+    
+    /// CORS 中间件
+    let corsConfiguration = CORSMiddleware.Configuration(
+        allowedOrigin: .all,
+        allowedMethods: [.GET, .POST, .PUT, .OPTIONS, .DELETE, .PATCH],
+        allowedHeaders: [.accept, .authorization, .contentType, .origin, .xRequestedWith, .userAgent, .accessControlAllowOrigin]
+    )
+    let cors = CORSMiddleware(configuration: corsConfiguration)
+
+    // Only add this if you want to enable the default per-route logging
+    let routeLogging = RouteLoggingMiddleware(logLevel: .info)
+
+    // Add the default error middleware
+    let error = ErrorMiddleware.default(environment: app.environment)
+    // Clear any existing middleware.
+    app.middleware = .init()
+    app.middleware.use(cors)
+    app.middleware.use(routeLogging)
+    app.middleware.use(error)
+    
+    // create a new JSON encoder that uses unix-timestamp dates
+    let encoder = JSONEncoder()
+    encoder.dateEncodingStrategy = .secondsSince1970
+
+    // override the global encoder used for the `.json` media type
+    ContentConfiguration.global.use(encoder: encoder, for: .json)
+    
     // register routes
     try routes(app)
     
