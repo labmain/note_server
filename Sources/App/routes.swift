@@ -95,6 +95,16 @@ func routes(_ app: Application) throws {
     app.get("notebook") { req -> EventLoopFuture<[Notebook]> in
         return Notebook.query(on: req.db).all()
     }
+    /// 检查笔记本名字
+    app.get("notebook","check") { req -> EventLoopFuture<Dictionary<String, String>> in
+        let name: String? = req.query["name"]
+        return Notebook.query(on: req.db).filter(\.$name == name ?? "").first().map{ obj in
+            if obj != nil {
+                return ["isHas": "1"]
+            }
+            return ["isHas": "0"]
+        }
+    }
     
     app.post("notebook") { (req) -> HTTPResponseStatus in
         try Notebook.validate(content: req)
