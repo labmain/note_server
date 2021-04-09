@@ -15,6 +15,8 @@ public func configure(_ app: Application) throws {
     // 数据库迁移（创建，更新数据表）
     app.migrations.add(Note_20210408_1_Migration())
     app.migrations.add(Notebook_20210409_4_Migration())
+    app.migrations.add(User.User_20210409_1_Migration())
+    app.migrations.add(UserToken.Migration())
     
     /// CORS 中间件
     let corsConfiguration = CORSMiddleware.Configuration(
