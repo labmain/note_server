@@ -30,16 +30,12 @@ func routes(_ app: Application) throws {
         var updateTime: Date?
     }
     
-    app.get { req in
-        return "It works!"
-    }
 
-    app.get("hello") { req -> [String: String] in
-        let hello = try req.query.decode(Hello.self)
-        return ["name": hello.name ?? "xxxx", "b": "bbb"]
-    }
+    let protected = app.grouped(User.authenticator())
+        .grouped(User.guardMiddleware())
+    
     app.get("note") { req -> EventLoopFuture<[Note]> in
-        let notebookID: String? = req.query["id"]
+        let notebookID: String? = req.query["notebookID"]
         guard notebookID != nil else {
            return Note.query(on: req.db).all()
         }
@@ -135,11 +131,15 @@ func routes(_ app: Application) throws {
     
     // 登录验证
     let passwordProtected = app.grouped(User.authenticator())
-    passwordProtected.post("login") { req -> EventLoopFuture<UserToken> in
+    passwordProtected.post("login") { req -> EventLoopFuture<User.UserInfo> in
         let user = try req.auth.require(User.self)
         let token = try user.generateToken()
+        
         return token.save(on: req.db)
-            .map { token }
+            .map { ttt in
+                return User.UserInfo(id: user.id?.uuidString ?? "", name: user.name, token: token.value)
+                
+            }
     }
     
     let tokenProtected = app.grouped(UserToken.authenticator())

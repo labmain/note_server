@@ -79,16 +79,23 @@ final class User: Model, Content {
 }
 
 extension User {
+    /// 注册用户
     struct Create: Content {
         var name: String
         var password: String
         var confirmPassword: String
     }
+    /// 用户信息
+    struct UserInfo: Content {
+        var id: String
+        var name: String
+        var token: String
+    }
 }
 extension User.Create: Validatable {
     static func validations(_ validations: inout Validations) {
         validations.add("name", as: String.self, is: !.empty)
-        validations.add("password", as: String.self, is: .count(8...))
+        validations.add("password", as: String.self, is: .count(6...))
     }
 }
 
